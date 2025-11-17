@@ -1,5 +1,5 @@
 # Use official Python image as base
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
@@ -38,4 +38,8 @@ COPY --chown=appuser:appuser . .
 EXPOSE 5000
 
 # Command to run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+# Use PORT environment variable if set, otherwise default to 5000
+# Note: PORT is typically set by the hosting platform (Heroku, Render, etc.)
+# Using shell form to allow environment variable substitution
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 2 --timeout 120 app:app"]
+

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NeoRisk | AI-Powered Loan Equity</title>
+    <title>RiskIntel | Smarter Loan Risk Assessment</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,9 +12,9 @@
             --accent: #ff7e5f;
             --dark: #1a1a2e;
             --light: #f5f5f7;
-            --high-risk: #ff4757;  /* Vibrant red for high risk */
-            --medium-risk: #feca57; /* Yellow for medium risk */
-            --low-risk: #1dd1a1;   /* Green for low risk */
+            --high-risk: #ff4757;
+            --medium-risk: #feca57;
+            --low-risk: #1dd1a1;
         }
         
         * {
@@ -92,9 +92,14 @@
             z-index: 1;
         }
         
-        .btn:hover {
+        .btn:hover:not(:disabled) {
             transform: translateY(-3px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
         
         .features {
@@ -156,7 +161,6 @@
             background: rgba(136, 211, 206, 0.1);
         }
         
-        /* Analyzer Styles */
         .analyzer-container {
             background: rgba(26,26,46,0.8);
             backdrop-filter: blur(10px);
@@ -224,6 +228,14 @@
             color: var(--low-risk);
         }
         
+        .moderate-risk {
+            color: var(--medium-risk);
+        }
+        
+        .medium-high-risk {
+            color: #ff6b6b;
+        }
+        
         .risk-indicator {
             display: inline-block;
             width: 15px;
@@ -235,15 +247,17 @@
         .error-message {
             color: var(--high-risk);
             margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 71, 87, 0.1);
+            border-radius: 8px;
             display: none;
         }
     </style>
 </head>
 <body>
-    <!-- Landing Page -->
     <div id="landing" class="active-section">
         <section class="hero">
-            <h1>NEO RISK</h1>
+            <h1>RiskIntel</h1>
             <p class="tagline">Democratizing access to fair credit through AI-powered risk assessment. Breaking systemic biases in loan approvals.</p>
             <a href="#" class="btn" id="launch-btn">Launch Risk Analyzer</a>
         </section>
@@ -266,46 +280,150 @@
         </section>
     </div>
     
-    <!-- Analyzer App -->
     <div id="analyzer" class="app-container">
         <button class="btn back-btn" id="back-btn">← Back to Overview</button>
         
         <div class="analyzer-container" id="analyzerForm">
-            <h2>Loan Risk Analyzer</h2>
+            <h2>Loan Application Risk Assessment</h2>
+            <p style="margin-bottom: 2rem; opacity: 0.9; font-size: 0.95rem;">Enter applicant information below for AI-powered risk analysis</p>
             <form id="riskForm">
+                <h3 style="margin-bottom: 1.5rem; color: var(--secondary); font-size: 1.2rem;">Basic Applicant Information</h3>
+                
                 <div class="form-group">
-                    <label for="income">Annual Income ($)</label>
-                    <input type="number" name="income" required>
+                    <label for="income">Applicant Annual Income ($)</label>
+                    <input type="number" name="income" required min="0" step="0.01" placeholder="Enter annual income">
                 </div>
                 
                 <div class="form-group">
-                    <label for="age">Age</label>
-                    <input type="number" name="age" required>
+                    <label for="age">Applicant Age</label>
+                    <input type="number" name="age" required min="18" max="100" placeholder="Enter age">
                 </div>
                 
                 <div class="form-group">
-                    <label for="loan_amount">Loan Amount ($)</label>
-                    <input type="number" name="loan_amount" required>
+                    <label for="loan_amount">Requested Loan Amount ($)</label>
+                    <input type="number" name="loan_amount" required min="0" step="0.01" placeholder="Enter loan amount">
                 </div>
                 
                 <div class="form-group">
                     <label for="credit_score">Credit Score (300-850)</label>
-                    <input type="number" name="credit_score" min="300" max="850" required>
+                    <input type="number" name="credit_score" min="300" max="850" required placeholder="Enter FICO credit score">
                 </div>
                 
                 <div class="form-group">
                     <label for="credit_utilization">Credit Utilization Ratio (0-1)</label>
-                    <input type="number" name="credit_utilization" step="0.01" min="0" max="1" value="0.5" required>
+                    <input type="number" name="credit_utilization" step="0.01" min="0" max="1" value="0.5" required placeholder="0.0 to 1.0 (e.g., 0.5 = 50%)">
                 </div>
                 
-                <button type="submit" class="btn">Calculate Risk</button>
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
+                <h3 style="margin-bottom: 1.5rem; color: var(--secondary); font-size: 1.2rem;">Cash Flow Analysis</h3>
+                <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">Based on applicant's last 3 months financial records</p>
+                
+                <div class="form-group">
+                    <label for="monthly_income">Average Monthly Income (₦)</label>
+                    <input type="number" name="monthly_income" id="monthly_income" step="0.01" min="0" placeholder="From all income sources" oninput="calculateDisposableIncome()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthly_expenses">Average Monthly Expenses (₦)</label>
+                    <input type="number" name="monthly_expenses" id="monthly_expenses" step="0.01" min="0" placeholder="Transport, food, bills, etc." oninput="calculateDisposableIncome()">
+                </div>
+                
+                <div class="form-group" style="padding: 1rem; background: rgba(136, 211, 206, 0.1); border-radius: 8px; border: 1px solid rgba(136, 211, 206, 0.3);">
+                    <label style="font-weight: 600; color: var(--secondary);">Disposable Income Calculator</label>
+                    <div style="margin-top: 0.5rem; font-size: 1.1rem;">
+                        <span>Disposable Income = Monthly Income - Monthly Expenses</span>
+                        <div style="margin-top: 0.5rem; font-size: 1.3rem; font-weight: 700; color: var(--secondary);">
+                            <span id="disposable_income_display">₦ 0.00</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthly_savings">Average Monthly Savings (₦)</label>
+                    <input type="number" name="monthly_savings" step="0.01" min="0" placeholder="Monthly savings amount">
+                </div>
+                
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
+                <h3 style="margin-bottom: 1.5rem; color: var(--secondary); font-size: 1.2rem;">Payment History Assessment</h3>
+                
+                <div class="form-group">
+                    <label for="bill_payment">Bill Payment Regularity</label>
+                    <select name="bill_payment" id="bill_payment" style="width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 1rem;">
+                        <option value="">Select payment history</option>
+                        <option value="always">Always pays rent & utilities on time</option>
+                        <option value="mostly">Mostly pays on time (occasionally late)</option>
+                        <option value="often_late">Often pays late</option>
+                        <option value="prefer_not">Information not available</option>
+                    </select>
+                </div>
+                
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
+                <h3 style="margin-bottom: 1.5rem; color: var(--secondary); font-size: 1.2rem;">Character References</h3>
+                <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">Applicant's provided references (may be contacted for verification)</p>
+                
+                <div class="form-group">
+                    <label for="ref1_name">Reference 1: Full Name</label>
+                    <input type="text" name="ref1_name" placeholder="Enter reference name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ref1_relationship">Reference 1: Relationship to Applicant</label>
+                    <input type="text" name="ref1_relationship" placeholder="e.g., Colleague, Family Friend, Pastor, Neighbor">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ref1_phone">Reference 1: Contact Number</label>
+                    <input type="text" name="ref1_phone" placeholder="Enter phone number">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ref2_name">Reference 2: Full Name</label>
+                    <input type="text" name="ref2_name" placeholder="Enter reference name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ref2_relationship">Reference 2: Relationship to Applicant</label>
+                    <input type="text" name="ref2_relationship" placeholder="e.g., Colleague, Family Friend, Pastor, Neighbor">
+                </div>
+                
+                <div class="form-group">
+                    <label for="ref2_phone">Reference 2: Contact Number</label>
+                    <input type="text" name="ref2_phone" placeholder="Enter phone number">
+                </div>
+                
+                <hr style="margin: 2rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.2);">
+                <h3 style="margin-bottom: 1.5rem; color: var(--secondary); font-size: 1.2rem;">Financial Behavior Assessment</h3>
+                <p style="margin-bottom: 1rem; opacity: 0.8; font-size: 0.9rem;">Based on applicant interview and documentation review</p>
+                
+                <div class="form-group" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" name="financial_habits" value="savings_habit" style="width: auto; margin-right: 0.5rem; cursor: pointer;">
+                        <span>☑ Has a regular savings habit</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" name="financial_habits" value="no_gambling" style="width: auto; margin-right: 0.5rem; cursor: pointer;">
+                        <span>☑ Rarely uses betting/gambling services</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" name="financial_habits" value="track_spending" style="width: auto; margin-right: 0.5rem; cursor: pointer;">
+                        <span>☑ Maintains spending tracking records</span>
+                    </label>
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" name="financial_habits" value="emergency_fund" style="width: auto; margin-right: 0.5rem; cursor: pointer;">
+                        <span>☑ Has emergency savings fund</span>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn" style="margin-top: 1.5rem;">Analyze Risk & Generate Assessment</button>
             </form>
             
             <div id="resultCard" class="result-card">
-                <h3>Risk Assessment</h3>
+                <h3>AI-Powered Risk Assessment Report</h3>
+                <div id="recommendation" style="font-size: 1.3rem; font-weight: 700; margin: 1rem 0; padding: 1rem; border-radius: 8px; text-align: center;"></div>
                 <div id="riskValue" class="risk-value">0%</div>
                 <p id="riskCategory">No risk data available</p>
-                <p id="riskExplanation"></p>
+                <div id="riskDetails" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;"></div>
+                <p id="riskExplanation" style="line-height: 1.8; margin-top: 1rem;"></p>
             </div>
             
             <div id="errorMessage" class="error-message"></div>
@@ -313,7 +431,34 @@
     </div>
 
     <script>
-        // Section switching with auto-scroll
+        // Disposable Income Calculator
+        function calculateDisposableIncome() {
+            const monthlyIncome = parseFloat(document.getElementById('monthly_income').value) || 0;
+            const monthlyExpenses = parseFloat(document.getElementById('monthly_expenses').value) || 0;
+            const disposableIncome = monthlyIncome - monthlyExpenses;
+            
+            const display = document.getElementById('disposable_income_display');
+            if (monthlyIncome > 0 || monthlyExpenses > 0) {
+                display.textContent = '₦ ' + disposableIncome.toLocaleString('en-US', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                // Color coding
+                if (disposableIncome > 0) {
+                    display.style.color = 'var(--low-risk)';
+                } else if (disposableIncome < 0) {
+                    display.style.color = 'var(--high-risk)';
+                } else {
+                    display.style.color = 'var(--secondary)';
+                }
+            } else {
+                display.textContent = '₦ 0.00';
+                display.style.color = 'var(--secondary)';
+            }
+        }
+        
+        // Section switching
         document.getElementById('launch-btn').addEventListener('click', function(e) {
             e.preventDefault();
             document.getElementById('landing').classList.remove('active-section');
@@ -327,18 +472,14 @@
             }, 100);
         });
         
-        // Back button with smooth scroll to top
         document.getElementById('back-btn').addEventListener('click', function(e) {
             e.preventDefault();
             document.getElementById('analyzer').classList.remove('active-section');
             document.getElementById('landing').classList.add('active-section');
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
         
-        // Form handling with clear risk thresholds
+        // Form submission with real API call
         document.getElementById('riskForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -349,130 +490,139 @@
             // Show loading state
             const submitBtn = this.querySelector('button[type="submit"]');
             const originalBtnText = submitBtn.textContent;
-            submitBtn.textContent = 'Analyzing...';
+            submitBtn.textContent = 'Processing Assessment...';
             submitBtn.disabled = true;
             
-            // Simulate API call (replace with actual fetch to your Flask backend)
-            setTimeout(() => {
-                try {
-                    // Mock response - replace with real data from Flask
-                    const mockPrediction = Math.random(); // 0-1
-                    const riskPercent = Math.round(mockPrediction * 100);
-                    
-                    // Determine risk level (51%+ = High Risk)
-                    let riskClass, riskText;
-                    if (riskPercent >= 51) {
-                        riskClass = 'high-risk';
-                        riskText = 'High Risk';
-                    } else if (riskPercent >= 31) {
-                        riskClass = 'medium-risk';
-                        riskText = 'Medium Risk';
-                    } else {
-                        riskClass = 'low-risk';
-                        riskText = 'Low Risk';
-                    }
-                    
-                    // Update UI
-                    const riskValue = document.getElementById('riskValue');
-                    const riskCategory = document.getElementById('riskCategory');
-                    const riskExplanation = document.getElementById('riskExplanation');
-                    
-                    riskValue.textContent = `${riskPercent}%`;
-                    riskCategory.innerHTML = `
-                        <span class="risk-indicator" style="background: var(--${riskClass})"></span>
-                        ${riskText}
-                    `;
-                    riskValue.className = `risk-value ${riskClass}`;
-                    
-                    // Set explanation based on risk level
-                    const explanations = {
-                        'high-risk': 'This application shows significant risk factors (51%+ default probability). Proceed with extreme caution.',
-                        'medium-risk': 'Moderate risk detected (31-50% default probability). Additional review recommended.',
-                        'low-risk': 'Low risk profile detected (0-30% default probability). This appears to be a safe application.'
-                    };
-                    riskExplanation.textContent = explanations[riskClass];
-                    
-                    // Show results
-                    document.getElementById('resultCard').style.display = 'block';
-                    
-                    // Scroll to results
-                    setTimeout(() => {
-                        document.getElementById('resultCard').scrollIntoView({ 
-                            behavior: 'smooth',
-                            block: 'nearest'
-                        });
-                    }, 300);
-                    
-                } catch (error) {
-                    document.getElementById('errorMessage').textContent = 'An error occurred. Please try again.';
-                    document.getElementById('errorMessage').style.display = 'block';
-                } finally {
-                    submitBtn.textContent = originalBtnText;
-                    submitBtn.disabled = false;
-                }
-            }, 1500);
-        });
-
-        // Uncomment for actual backend connection
-        /*
-        document.getElementById('riskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.textContent;
-            submitBtn.textContent = 'Analyzing...';
-            submitBtn.disabled = true;
-            
+            // Make API call to Flask backend
             fetch('/', {
                 method: 'POST',
-                body: new FormData(this),
-                headers: {
-                    'Accept': 'application/json'
-                }
+                body: new FormData(this)
             })
-            .then(response => response.json())
-            .then(data => {
-                const riskPercent = Math.round(data.prediction * 100);
-                
-                // Determine risk level (51%+ = High Risk)
-                let riskClass, riskText;
-                if (riskPercent >= 51) {
-                    riskClass = 'high-risk';
-                    riskText = 'High Risk';
-                } else if (riskPercent >= 31) {
-                    riskClass = 'medium-risk';
-                    riskText = 'Medium Risk';
-                } else {
-                    riskClass = 'low-risk';
-                    riskText = 'Low Risk';
+            .then(response => {
+                if (!response.ok) {
+                    // Try to parse error as JSON, fallback to status text
+                    return response.json().then(err => {
+                        const errorMessage = err.error || err.message || `Server error (${response.status})`;
+                        throw new Error(errorMessage);
+                    }).catch(parseError => {
+                        // If JSON parsing fails, use status text
+                        throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                    });
                 }
+                return response.json();
+            })
+            .then(data => {
+                const riskPercent = data.risk_percent;
+                const riskClass = data.risk_class || (riskPercent >= 50 ? 'high-risk' : riskPercent >= 20 ? 'medium-risk' : 'low-risk');
+                const isSafe = data.is_safe;
+                const recommendation = data.recommendation || '';
+                const explanation = data.explanation || '';
+                const details = data.details || {};
                 
                 // Update UI
-                document.getElementById('riskValue').textContent = `${riskPercent}%`;
-                document.getElementById('riskCategory').innerHTML = `
+                const riskValue = document.getElementById('riskValue');
+                const riskCategory = document.getElementById('riskCategory');
+                const riskExplanation = document.getElementById('riskExplanation');
+                const recommendationEl = document.getElementById('recommendation');
+                const riskDetails = document.getElementById('riskDetails');
+                
+                // Set recommendation with appropriate styling
+                if (recommendation) {
+                    if (isSafe) {
+                        recommendationEl.textContent = '✓ ' + recommendation;
+                        recommendationEl.style.background = 'rgba(29, 209, 161, 0.2)';
+                        recommendationEl.style.color = 'var(--low-risk)';
+                        recommendationEl.style.border = '2px solid var(--low-risk)';
+                    } else {
+                        recommendationEl.textContent = '✗ ' + recommendation;
+                        recommendationEl.style.background = 'rgba(255, 71, 87, 0.2)';
+                        recommendationEl.style.color = 'var(--high-risk)';
+                        recommendationEl.style.border = '2px solid var(--high-risk)';
+                    }
+                }
+                
+                // Set risk value and category
+                riskValue.textContent = `${riskPercent.toFixed(1)}%`;
+                riskCategory.innerHTML = `
                     <span class="risk-indicator" style="background: var(--${riskClass})"></span>
-                    ${riskText}
+                    ${data.risk_category || 'Risk Assessment'}
                 `;
-                document.getElementById('riskValue').className = `risk-value ${riskClass}`;
-                document.getElementById('riskExplanation').textContent = explanations[riskClass];
+                riskValue.className = `risk-value ${riskClass}`;
+                
+                // Set detailed explanation
+                if (explanation) {
+                    riskExplanation.textContent = explanation;
+                }
+                
+                // Set additional details
+                if (details && Object.keys(details).length > 0) {
+                    let detailsHTML = '<strong>Key Metrics:</strong><br>';
+                    if (details.credit_score_category) {
+                        detailsHTML += `• Credit Score Category: <strong>${details.credit_score_category}</strong><br>`;
+                    }
+                    if (details.debt_to_income_ratio !== undefined) {
+                        detailsHTML += `• Debt-to-Income Ratio: <strong>${(details.debt_to_income_ratio * 100).toFixed(1)}%</strong><br>`;
+                    }
+                    if (details.credit_utilization !== undefined) {
+                        detailsHTML += `• Credit Utilization: <strong>${details.credit_utilization}%</strong><br>`;
+                    }
+                    
+                    // Show enhanced scoring bonuses
+                    if (details.total_bonus !== undefined && details.total_bonus !== 0) {
+                        detailsHTML += '<br><strong>Enhanced Scoring:</strong><br>';
+                        if (details.bill_payment_bonus !== undefined && details.bill_payment_bonus !== 0) {
+                            detailsHTML += `• Bill Payment: <strong>${details.bill_payment_bonus > 0 ? '+' : ''}${details.bill_payment_bonus} pts</strong><br>`;
+                        }
+                        if (details.reference_bonus !== undefined && details.reference_bonus !== 0) {
+                            detailsHTML += `• References: <strong>${details.reference_bonus > 0 ? '+' : ''}${details.reference_bonus} pts</strong><br>`;
+                        }
+                        if (details.habits_bonus !== undefined && details.habits_bonus !== 0) {
+                            detailsHTML += `• Financial Habits: <strong>${details.habits_bonus > 0 ? '+' : ''}${details.habits_bonus} pts</strong><br>`;
+                        }
+                        if (details.cash_flow_bonus !== undefined && details.cash_flow_bonus !== 0) {
+                            detailsHTML += `• Cash Flow: <strong>${details.cash_flow_bonus > 0 ? '+' : ''}${details.cash_flow_bonus.toFixed(1)} pts</strong><br>`;
+                        }
+                        detailsHTML += `• <strong>Total Bonus: ${details.total_bonus > 0 ? '+' : ''}${details.total_bonus.toFixed(1)} pts</strong>`;
+                        
+                        if (data.base_risk_percent !== undefined && data.risk_adjustment !== undefined) {
+                            detailsHTML += `<br><br><em>Base Risk: ${data.base_risk_percent.toFixed(1)}% → Adjusted: ${data.risk_percent.toFixed(1)}% (${data.risk_adjustment > 0 ? '+' : ''}${data.risk_adjustment.toFixed(1)}%)</em>`;
+                        }
+                    }
+                    riskDetails.innerHTML = detailsHTML;
+                }
+                
+                // Show results
                 document.getElementById('resultCard').style.display = 'block';
                 
+                // Scroll to results
                 setTimeout(() => {
                     document.getElementById('resultCard').scrollIntoView({ 
                         behavior: 'smooth',
                         block: 'nearest'
                     });
                 }, 300);
+                
             })
             .catch(error => {
-                document.getElementById('errorMessage').textContent = 'Server error. Please try again.';
-                document.getElementById('errorMessage').style.display = 'block';
+                console.error('Error:', error);
+                const errorMsg = document.getElementById('errorMessage');
+                const errorText = error.message || 'An error occurred. Please try again.';
+                errorMsg.textContent = errorText;
+                errorMsg.style.display = 'block';
+                
+                // Scroll to error message
+                setTimeout(() => {
+                    errorMsg.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }, 100);
             })
             .finally(() => {
                 submitBtn.textContent = originalBtnText;
                 submitBtn.disabled = false;
             });
         });
-        */
     </script>
 </body>
 </html>

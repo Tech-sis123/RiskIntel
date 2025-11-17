@@ -4,9 +4,11 @@ services:
     env: python
     pythonVersion: 3.10
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    startCommand: "gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 2 --timeout 120 app:app"
     envVars:
       - key: PORT
         value: 10000
+      - key: FLASK_ENV
+        value: production
 
 
