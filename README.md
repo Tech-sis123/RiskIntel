@@ -57,6 +57,8 @@ The model uses XGBoost classifier with the following features:
 - Credit Utilization Ratio (0-1)
 - Debt-to-Income Ratio (calculated)
 
+   You can test the app at https://riskintel.onrender.com/
+
 ## Requirements
 
 - Python 3.10+
