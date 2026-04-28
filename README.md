@@ -1,6 +1,7 @@
-# Loan Default Risk Predictor (NeoRisk)
+# Loan Default Risk Predictor (RiskIntel)
 
 A machine learning model to predict loan default risk, deployed as a Flask web application with a modern, responsive UI.
+   You can test the app at https://riskintel.onrender.com/
 
 ## Features
 
@@ -56,8 +57,6 @@ The model uses XGBoost classifier with the following features:
 - Credit Score (300-850)
 - Credit Utilization Ratio (0-1)
 - Debt-to-Income Ratio (calculated)
-
-   You can test the app at https://riskintel.onrender.com/
 
 ## Requirements
 
